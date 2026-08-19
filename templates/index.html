@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block breadcrumb %}Página inicial{% endblock %}
+{% block title %}LogiTrack — Início{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 min-h-[380px]">
+
+  <div class="flex flex-col justify-end gap-3 max-w-xs">
+    <a href="{{ url_for('operadores') }}"
+       class="text-center bg-blue-500 hover:bg-blue-600 transition text-white font-mono font-semibold py-3 rounded-md shadow-sm">
+      Operadores
+    </a>
+    <a href="{{ url_for('leitores') }}"
+       class="text-center bg-blue-500 hover:bg-blue-600 transition text-white font-mono font-semibold py-3 rounded-md shadow-sm">
+      Leitores
+    </a>
+    <a href="{{ url_for('registros') }}"
+       class="text-center bg-blue-500 hover:bg-blue-600 transition text-white font-mono font-semibold py-3 rounded-md shadow-sm">
+      Registros
+    </a>
+  </div>
+
+  <div>
+    <h2 class="font-mono font-bold text-slate-800 mb-3">Em progresso</h2>
+
+    {% if postos %}
+      <div class="space-y-4">
+        {% for posto, pessoas in postos.items() %}
+          <div>
+            <p class="font-mono text-sm text-slate-600 font-semibold">({{ posto }})</p>
+            <ul class="font-mono text-sm text-slate-500 pl-1">
+              {% for p in pessoas %}
+                <li>-{{ p.nome }} (desde {{ p.desde }})</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-sm text-slate-400 font-mono">Nenhum acesso em aberto no momento.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

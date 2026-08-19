@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block breadcrumb %}Leitores{% endblock %}
+{% block title %}LogiTrack — Leitores{% endblock %}
+
+{% block content %}
+<h2 class="font-mono italic font-bold text-xl text-slate-800 mb-4">Leitores</h2>
+
+<div class="overflow-hidden rounded border border-slate-200">
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="bg-slate-300 text-slate-800 font-mono text-left">
+        <th class="px-4 py-2 w-16">ID</th>
+        <th class="px-4 py-2">NOME</th>
+        <th class="px-4 py-2 w-28"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for l in leitores %}
+      <tr class="{{ 'bg-amber-50' if l.pendente else ('bg-white' if loop.index0 % 2 == 0 else 'bg-slate-50') }}">
+        <td class="px-4 py-3 font-mono text-slate-500">{{ l.id }}</td>
+        <td class="px-4 py-3 font-mono text-slate-700">
+          {{ l.nome }}
+          {% if l.pendente %}
+            <span class="ml-2 text-xs font-mono px-2 py-0.5 rounded bg-amber-200 text-amber-800">pendente</span>
+          {% endif %}
+        </td>
+        <td class="px-4 py-3">
+          <div class="flex gap-2 justify-end">
+            <button type="button" title="Editar"
+                    class="js-edit-btn w-6 h-6 flex items-center justify-center rounded-full bg-green-500 hover:bg-green-600 transition"
+                    data-id="{{ l.id }}" data-nome="{{ l.nome }}">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+              </svg>
+            </button>
+            <button type="button" title="Excluir"
+                    class="js-delete-btn w-6 h-6 flex items-center justify-center rounded-full bg-red-600 hover:bg-red-700 transition"
+                    data-id="{{ l.id }}" data-nome="{{ l.nome }}">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 7h16"></path>
+                <path d="M9 7V4h6v3"></path>
+                <path d="M6 7l1 13h10l1-13"></path>
+                <path d="M10 11v6"></path>
+                <path d="M14 11v6"></path>
+              </svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="3" class="px-4 py-6 text-center text-slate-400 font-mono">
+          Nenhum leitor cadastrado.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<p class="text-xs text-slate-400 font-mono mt-3">
+  Lápis = editar &nbsp;•&nbsp; Lixeira = excluir (remove também os registros do leitor, via ON DELETE CASCADE) &nbsp;•&nbsp;
+  Linhas em <span class="text-amber-700">amarelo</span> foram criadas automaticamente por um leitor_id desconhecido.
+</p>
+
+<!-- Modal: editar leitor -->
+<div id="editModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-sm">
+    <form method="post" id="editForm">
+      <div class="px-5 py-4 border-b border-slate-200">
+        <h3 class="font-mono font-bold text-slate-800">Editar leitor</h3>
+      </div>
+      <div class="px-5 py-4">
+        <label class="block text-xs font-mono text-slate-500 mb-1">Nome</label>
+        <input type="text" name="nome" id="editNome" required
+               class="w-full border border-slate-300 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-400">
+      </div>
+      <div class="px-5 py-4 border-t border-slate-200 flex justify-end gap-2">
+        <button type="button" id="editCancelBtn"
+                class="px-4 py-2 text-sm font-mono text-slate-600 hover:bg-slate-100 rounded">Cancelar</button>
+        <button type="submit"
+                class="px-4 py-2 text-sm font-mono text-white bg-green-600 hover:bg-green-700 rounded">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: confirmar exclusão -->
+<div id="deleteModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-sm">
+    <div class="px-5 py-4 border-b border-slate-200">
+      <h3 class="font-mono font-bold text-slate-800">Excluir leitor</h3>
+    </div>
+    <div class="px-5 py-4 text-sm text-slate-600 font-mono">
+      Tem certeza que deseja excluir <span id="deleteNome" class="font-semibold"></span>?
+      Os registros desse leitor também serão removidos. Essa ação não pode ser desfeita.
+    </div>
+    <div class="px-5 py-4 border-t border-slate-200 flex justify-end gap-2">
+      <button type="button" id="deleteCancelBtn"
+              class="px-4 py-2 text-sm font-mono text-slate-600 hover:bg-slate-100 rounded">Cancelar</button>
+      <form method="post" id="deleteForm">
+        <button type="submit"
+                class="px-4 py-2 text-sm font-mono text-white bg-red-600 hover:bg-red-700 rounded">Excluir</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var editModal = document.getElementById('editModal');
+    var deleteModal = document.getElementById('deleteModal');
+
+    function openModal(modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    function closeModal(modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    document.querySelectorAll('.js-edit-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = btn.getAttribute('data-id');
+        document.getElementById('editForm').action = '/leitores/' + id + '/editar';
+        document.getElementById('editNome').value = btn.getAttribute('data-nome') || '';
+        openModal(editModal);
+      });
+    });
+
+    document.querySelectorAll('.js-delete-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = btn.getAttribute('data-id');
+        document.getElementById('deleteForm').action = '/leitores/' + id + '/excluir';
+        document.getElementById('deleteNome').textContent = btn.getAttribute('data-nome') || '';
+        openModal(deleteModal);
+      });
+    });
+
+    document.getElementById('editCancelBtn').addEventListener('click', function () { closeModal(editModal); });
+    document.getElementById('deleteCancelBtn').addEventListener('click', function () { closeModal(deleteModal); });
+
+    [editModal, deleteModal].forEach(function (modal) {
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeModal(modal);
+      });
+    });
+  })();
+</script>
+{% endblock %}

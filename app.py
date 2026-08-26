@@ -78,6 +78,64 @@ def operadores():
     return render_template("operadores.html", funcionarios=funcionarios)
 
 
+@app.route("/operadores/<int:funcionario_id>")
+def perfil_funcionario(funcionario_id):
+    """Perfil do funcionário: mostra um gráfico com os tempos entre pares
+    de ENTRADA (status=1) e SAÍDA (status=0) encontrados na tabela registros.
+    """
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT id, nome, uid FROM funcionario WHERE id = %s", (funcionario_id,))
+            funcionario = cursor.fetchone()
+            if not funcionario:
+                flash("Funcionário não encontrado.", "info")
+                return redirect(url_for("operadores"))
+
+            cursor.execute(
+                """
+                SELECT r.timestamp, r.status
+                FROM registros r
+                WHERE r.funcionario_id = %s
+                ORDER BY r.timestamp ASC, r.id ASC
+                """,
+                (funcionario_id,),
+            )
+            registros = cursor.fetchall()
+    finally:
+        conn.close()
+
+    # Monta sessões: emparelha um status=1 (entrada) com o próximo status=0 (saída)
+    from datetime import timedelta
+
+    sessions = []
+    start = None
+    for r in registros:
+        ts = r.get('timestamp')
+        status = bool(r.get('status'))
+        if status and start is None:
+            start = ts
+        elif (not status) and start is not None:
+            # Encontrou saída para a entrada anterior
+            delta = ts - start
+            seconds = delta.total_seconds() if hasattr(delta, 'total_seconds') else 0
+            hours = seconds / 3600.0
+            sessions.append({
+                'start': start,
+                'end': ts,
+                'seconds': seconds,
+                'hours': hours,
+            })
+            start = None
+        # Ignora outros padrões (saídas sem entrada, entradas consecutivas sem saída)
+
+    labels = [s['start'].strftime('%d/%m %H:%M') for s in sessions]
+    values = [round(s['hours'], 3) for s in sessions]
+
+    return render_template('perfil.html', funcionario=funcionario, sessions=sessions, labels=labels, values=values)
+
+
+
 @app.route("/operadores/<int:funcionario_id>/editar", methods=["POST"])
 def editar_funcionario(funcionario_id):
     """Botão verde (lápis): salva as alterações feitas no modal de edição.

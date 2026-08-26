@@ -28,7 +28,7 @@
         <tr class="{{ 'bg-amber-50' if f.pendente else ('bg-white' if loop.index0 % 2 == 0 else 'bg-slate-50') }}">
           <td class="px-4 py-2 font-mono text-slate-500">{{ f.id }}</td>
           <td class="px-4 py-2 font-bold font-mono text-slate-700">
-            {{ f.nome }}
+            <a href="{{ url_for('perfil_funcionario', funcionario_id=f.id) }}" class="text-slate-700 hover:text-blue-600">{{ f.nome }}</a>
             {% if f.pendente %}
               <span class="ml-2 text-xs font-normal font-mono px-2 py-0.5 rounded bg-amber-200 text-amber-800">PENDENTE</span>
             {% endif %}

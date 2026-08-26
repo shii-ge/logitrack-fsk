@@ -87,8 +87,7 @@ administrador aprove ou exclua os cadastros pendentes de funcionário/leitor.
 
 ## Simulando uma leitura (para teste)
 
-Como a app não insere em `registros`, simule uma leitura de tag diretamente
-no MySQL para ver o trigger e as páginas funcionando:
+Como a app não insere em `registros`, simule uma leitura de tag diretamente no MySQL para ver o trigger e as páginas funcionando:
 
 ```sql
 INSERT INTO registros (uid, leitor_id) VALUES ('04 A1 B2 3C', 1);

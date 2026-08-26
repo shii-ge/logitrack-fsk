@@ -6,6 +6,13 @@
 <div class="px-64">
   <h2 class="font-mono font-bold text-xl text-slate-800 mb-4">Operadores</h2>
   
+  <div class="mb-4">
+    <label for="searchInput" class="sr-only">Pesquisar operadores</label>
+    <input id="searchInput" type="search" placeholder="Pesquisar por nome ou UID..."
+          class="w-full max-w-md border border-slate-300 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-400"
+          autocomplete="off">
+  </div>
+
   <div class="overflow-hidden rounded border border-slate-200">
     <table class="w-full text-sm">
       <thead>
@@ -158,6 +165,61 @@
         if (e.target === modal) closeModal(modal);
       });
     });
+
+    var searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+      var table = document.querySelector('.px-64 table');
+      var tbody = table && table.querySelector('tbody');
+      var noResultsRow = null;
+      var debounceTimer = null;
+
+      function showNoResults() {
+        if (!tbody) return;
+        if (!noResultsRow) {
+          noResultsRow = document.createElement('tr');
+          noResultsRow.innerHTML = '<td colspan="4" class="px-4 py-6 text-center text-slate-400 font-mono">Nenhum funcionário encontrado.</td>';
+          tbody.appendChild(noResultsRow);
+        }
+      }
+      function hideNoResults() {
+        if (noResultsRow && noResultsRow.parentNode) {
+          noResultsRow.parentNode.removeChild(noResultsRow);
+          noResultsRow = null;
+        }
+      }
+
+      function filterRows() {
+        if (!tbody) return;
+        var q = (searchInput.value || '').trim().toLowerCase();
+        var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+        var visible = 0;
+
+        rows.forEach(function (row) {
+          var text = (row.textContent || '').toLowerCase();
+          if (q === '' || text.indexOf(q) !== -1) {
+            row.style.display = '';
+            visible += 1;
+          } else {
+            row.style.display = 'none';
+          }
+        });
+
+        if (visible === 0) showNoResults(); else hideNoResults();
+      }
+
+      searchInput.addEventListener('input', function () {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(filterRows, 150);
+      });
+
+      searchInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          searchInput.value = '';
+          filterRows();
+        }
+      });
+    }
+
   })();
 </script>
 {% endblock %}

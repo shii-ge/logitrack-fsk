@@ -19,7 +19,6 @@ def get_connection():
         autocommit=True,
     )
 
-
 # ---------------------------------------------------------------------------
 # Página inicial: "Em progresso" -> para cada leitor, funcionários cujo
 # último registro (uid + leitor) tem status = TRUE (entrada ainda aberta)

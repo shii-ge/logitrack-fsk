@@ -26,18 +26,17 @@
 </head>
 <body class="bg-slate-100 min-h-screen">
 
-  <div class="max-w-6xl mx-auto p-6">
-    <p class="text-xs uppercase tracking-widest text-slate-400 mb-2 font-mono">{% block breadcrumb %}Página inicial{% endblock %}</p>
-
-    <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+  <div class="max-w-screen mx-auto">
+    <div class="bg-white shadow-sm overflow-hidden">
       <div class="bg-slate-800 px-6 py-4 flex items-center justify-between">
-        <h1 class="text-white font-mono font-bold text-lg tracking-wide">LogiTrack</h1>
-        <nav class="flex gap-4 text-sm">
-          <a href="{{ url_for('index') }}" class="text-slate-300 hover:text-white transition">Início</a>
-          <a href="{{ url_for('operadores') }}" class="text-slate-300 hover:text-white transition">Operadores</a>
-          <a href="{{ url_for('leitores') }}" class="text-slate-300 hover:text-white transition">Leitores</a>
-          <a href="{{ url_for('registros') }}" class="text-slate-300 hover:text-white transition">Registros</a>
-        </nav>
+        <a href="{{ url_for('index') }}" class="text-white font-mono font-bold text-xl tracking-wide">LogiTrack</a>
+        {% if request.endpoint != 'index' %}
+          <nav class="flex gap-4 text-sm">
+            <a href="{{ url_for('operadores') }}" class="text-slate-300 hover:text-white transition">Operadores</a>
+            <a href="{{ url_for('leitores') }}" class="text-slate-300 hover:text-white transition">Leitores</a>
+            <a href="{{ url_for('registros') }}" class="text-slate-300 hover:text-white transition">Registros</a>
+          </nav>
+        {% endif %}
       </div>
 
       {% with messages = get_flashed_messages(with_categories=true) %}

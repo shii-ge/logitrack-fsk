@@ -3,49 +3,51 @@
 {% block title %}LogiTrack — Registros{% endblock %}
 
 {% block content %}
-<h2 class="font-mono italic font-bold text-xl text-slate-800 mb-4">Registros</h2>
-
-<div class="overflow-hidden rounded border border-slate-200 overflow-x-auto">
-  <table class="w-full text-sm">
-    <thead>
-      <tr class="bg-slate-300 text-slate-800 font-mono text-left">
-        <th class="px-4 py-2">ID</th>
-        <th class="px-4 py-2">FUNCIONÁRIO</th>
-        <th class="px-4 py-2">UID</th>
-        <th class="px-4 py-2">LEITOR</th>
-        <th class="px-4 py-2">DATA/HORA</th>
-        <th class="px-4 py-2">STATUS</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for r in historico %}
-      <tr class="{{ 'bg-white' if loop.index0 % 2 == 0 else 'bg-slate-50' }}">
-        <td class="px-4 py-2 font-mono text-slate-500">{{ r.id }}</td>
-        <td class="px-4 py-2 font-mono text-slate-700">
-          {{ r.funcionario or '-' }}
-          {% if r.funcionario_pendente %}
-            <span class="ml-1 text-xs font-mono px-1.5 py-0.5 rounded bg-amber-200 text-amber-800">pendente</span>
-          {% endif %}
-        </td>
-        <td class="px-4 py-2 font-mono text-slate-500">{{ r.uid }}</td>
-        <td class="px-4 py-2 font-mono text-slate-500">{{ r.leitor or '-' }}</td>
-        <td class="px-4 py-2 font-mono text-slate-500">{{ r.timestamp.strftime('%d/%m %H:%M:%S') if r.timestamp else '-' }}</td>
-        <td class="px-4 py-2">
-          {% if r.status %}
-            <span class="text-xs font-mono px-2 py-1 rounded bg-green-50 text-green-700">entrada</span>
-          {% else %}
-            <span class="text-xs font-mono px-2 py-1 rounded bg-slate-100 text-slate-500">saída</span>
-          {% endif %}
-        </td>
-      </tr>
-      {% else %}
-      <tr>
-        <td colspan="6" class="px-4 py-6 text-center text-slate-400 font-mono">
-          Nenhum registro encontrado.
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="px-64">
+  <h2 class="font-mono font-bold text-xl text-slate-800 mb-4">Registros</h2>
+  
+  <div class="overflow-hidden rounded border border-slate-200 overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-slate-300 text-slate-800 font-mono text-left">
+          <th class="px-4 py-1">ID</th>
+          <th class="px-4 py-1">FUNCIONÁRIO</th>
+          <th class="px-4 py-1">UID</th>
+          <th class="px-4 py-1">LEITOR</th>
+          <th class="px-4 py-1">DATA/HORA</th>
+          <th class="px-4 py-1">STATUS</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in historico %}
+        <tr class="{{ 'bg-white' if loop.index0 % 2 == 0 else 'bg-slate-50' }}">
+          <td class="px-4 py-2 font-mono text-slate-500">{{ r.id }}</td>
+          <td class="px-4 py-2 font-bold font-mono text-slate-700">
+            {{ r.funcionario or '-' }}
+            {% if r.funcionario_pendente %}
+              <span class="ml-1 text-xs font-normal font-mono px-1.5 py-0.5 rounded bg-amber-200 text-amber-800">PENDENTE</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-2 font-mono text-slate-500">{{ r.uid }}</td>
+          <td class="px-4 py-2 font-mono text-slate-500">{{ r.leitor or '-' }}</td>
+          <td class="px-4 py-2 font-mono text-slate-500">{{ r.timestamp.strftime('%d/%m %H:%M:%S') if r.timestamp else '-' }}</td>
+          <td class="px-4 py-2">
+            {% if r.status %}
+              <span class="text-xs font-mono px-2 py-1 rounded bg-green-50 text-green-700">ENTRADA</span>
+            {% else %}
+              <span class="text-xs font-mono px-2 py-1 rounded bg-slate-100 text-slate-500">SAÍDA</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="px-4 py-6 text-center text-slate-400 font-mono">
+            Nenhum registro encontrado.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endblock %}

@@ -10,67 +10,66 @@
       <p class="text-sm font-mono text-slate-500">UID: {{ funcionario.uid or '-' }}</p>
     </div>
     <div>
-      <a href="{{ url_for('operadores') }}" class="text-sm font-mono text-slate-600 hover:text-slate-800">&larr; Voltar</a>
+      <a href="{{ url_for('operadores') }}" class="text-sm font-mono text-slate-600 hover:text-slate-800">&larr;
+        Voltar</a>
     </div>
   </div>
 
   <div class="bg-white border border-slate-200 rounded p-4 mb-6">
-    <h3 class="font-mono font-semibold text-slate-700 mb-2">Tempos por sessão (entrada → saída)</h3>
-    {% if labels and values and values|length > 0 %}
-      <canvas id="durChart"></canvas>
+    <h3 class="font-mono font-semibold text-slate-700 mb-2">Tempo por dia e leitor</h3>
+    {% if labels and datasets and datasets|length > 0 %}
+    <canvas id="durChart"></canvas>
     {% else %}
-      <p class="text-sm text-slate-500 font-mono">Não há pares entrada/saída completos para este operador.</p>
+    <p class="text-sm text-slate-500 font-mono">Não há pares entrada/saída completos para este operador.</p>
     {% endif %}
   </div>
 
   <div class="bg-white border border-slate-200 rounded p-4">
     <h3 class="font-mono font-semibold text-slate-700 mb-2">Sessões</h3>
     {% if sessions and sessions|length > 0 %}
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="bg-slate-100 text-slate-700 font-mono text-left">
-              <th class="px-3 py-2">Início</th>
-              <th class="px-3 py-2">Fim</th>
-              <th class="px-3 py-2">Duração (horas)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for s in sessions %}
-            <tr class="{{ 'bg-white' if loop.index0 % 2 == 0 else 'bg-slate-50' }}">
-              <td class="px-3 py-2 font-mono text-slate-600">{{ s.start.strftime('%d/%m %H:%M:%S') }}</td>
-              <td class="px-3 py-2 font-mono text-slate-600">{{ s.end.strftime('%d/%m %H:%M:%S') }}</td>
-              <td class="px-3 py-2 font-mono text-slate-700">{{ ('%.3f' % s.hours) }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-slate-100 text-slate-700 font-mono text-left">
+            <th class="px-3 py-2">Início</th>
+            <th class="px-3 py-2">Fim</th>
+            <th class="px-3 py-2">Duração (horas)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in sessions %}
+          <tr class="{{ 'bg-white' if loop.index0 % 2 == 0 else 'bg-slate-50' }}">
+            <td class="px-3 py-2 font-mono text-slate-600">{{ s.start.strftime('%d/%m %H:%M:%S') }}</td>
+            <td class="px-3 py-2 font-mono text-slate-600">{{ s.end.strftime('%d/%m %H:%M:%S') }}</td>
+            <td class="px-3 py-2 font-mono text-slate-700">{{ ('%.3f' % s.hours) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
     {% else %}
-      <p class="text-sm text-slate-500 font-mono">Nenhuma sessão completa encontrada.</p>
+    <p class="text-sm text-slate-500 font-mono">Nenhuma sessão completa encontrada.</p>
     {% endif %}
   </div>
 </div>
 
-{% if labels and values and values|length > 0 %}
+{% if labels and datasets and datasets|length > 0 %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   (function () {
-    const labels = {{ labels|tojson }};
-    const values = {{ values|tojson }};
-
+    const labels = {{ labels| tojson }};
+    const datasets = {{ datasets| tojson }};
+    
     const ctx = document.getElementById('durChart').getContext('2d');
+    
     new Chart(ctx, {
       type: 'bar',
       data: {
         labels: labels,
-        datasets: [{
-          label: 'Duração (horas)',
-          data: values,
-          backgroundColor: 'rgba(59, 130, 246, 0.8)',
-          borderColor: 'rgba(37, 99, 235, 1)',
-          borderWidth: 1
-        }]
+        datasets: datasets.map((dataset) => ({
+          ...dataset,
+          borderRadius: 2,
+        }))
       },
       options: {
         responsive: true,
@@ -78,20 +77,29 @@
         aspectRatio: 3,
         animation: { duration: 300 },
         scales: {
+          x: {
+            stacked: true,
+            ticks: { font: { family: 'JetBrains Mono' } }
+          },
           y: {
+            stacked: true,
             beginAtZero: true,
             title: { display: true, text: 'Horas', font: { family: 'JetBrains Mono' } }
-          },
-          x: { ticks: { font: { family: 'JetBrains Mono' } } }
+          }
         },
         interaction: { mode: 'nearest', intersect: false },
         plugins: {
-          legend: { display: false }
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: { font: { family: 'JetBrains Mono' } }
+          }
         }
       }
     });
-  })();
+  }) ();
 </script>
+
 {% endif %}
 
 {% endblock %}

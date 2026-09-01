@@ -69,7 +69,7 @@ def operadores():
     try:
         with conn.cursor() as cursor:
             cursor.execute(
-                "SELECT id, nome, uid, pendente FROM funcionario ORDER BY pendente DESC, nome"
+                "SELECT id, nome, uid, pendente FROM funcionario ORDER BY nome"
             )
             funcionarios = cursor.fetchall()
     finally:
@@ -133,8 +133,6 @@ def perfil_funcionario(funcionario_id):
     values = [round(s['hours'], 3) for s in sessions]
 
     return render_template('perfil.html', funcionario=funcionario, sessions=sessions, labels=labels, values=values)
-
-
 
 @app.route("/operadores/<int:funcionario_id>/editar", methods=["POST"])
 def editar_funcionario(funcionario_id):

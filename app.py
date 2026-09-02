@@ -141,6 +141,25 @@ def perfil_funcionario(funcionario_id):
         day_totals = daily_totals.setdefault(day, {})
         day_totals[leitor_key] = day_totals.get(leitor_key, 0.0) + float(s['hours'])
 
+    current_month = datetime.now().strftime('%m/%Y')
+    month_sessions = [
+        session for session in sessions
+        if session['start'].strftime('%m/%Y') == current_month
+    ]
+    monthly_hours = sum(float(session['hours']) for session in month_sessions)
+    monthly_readers = len({session['leitor_id'] for session in month_sessions})
+    monthly_days = len({
+        session['start'].strftime('%Y-%m-%d')
+        for session in month_sessions
+    })
+    monthly_stats = {
+        'month': current_month,
+        'sessions': len(month_sessions),
+        'hours': monthly_hours,
+        'readers': monthly_readers,
+        'average_daily_hours': monthly_hours / monthly_days if monthly_days else 0.0,
+    }
+
     labels = sorted(
         daily_totals.keys(),
         key=lambda d: (int(d.split('/')[1]), int(d.split('/')[0])),
@@ -154,16 +173,14 @@ def perfil_funcionario(funcionario_id):
         ),
     )
 
+    reader_labels = []
+    reader_values = []
     datasets = []
     palette = [
         '#2563eb', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899',
         '#14b8a6', '#f97316', '#84cc16', '#0ea5e9', '#a855f7', '#f43f5e'
     ]
     for idx, reader_id in enumerate(reader_ids):
-        data = []
-        for day in labels:
-            data.append(round(daily_totals.get(day, {}).get(reader_id, 0.0), 3))
-
         label = 'Sem leitor'
         if reader_id != 'Sem leitor':
             try:
@@ -172,6 +189,11 @@ def perfil_funcionario(funcionario_id):
                 reader_int = None
             label = reader_names.get(reader_int, f'Leitor {reader_id}') if reader_int is not None else f'Leitor {reader_id}'
 
+        reader_labels.append(label)
+        data = [round(daily_totals.get(day, {}).get(reader_id, 0.0), 3) for day in labels]
+        reader_values.append(round(sum(
+            daily_totals.get(day, {}).get(reader_id, 0.0) for day in labels
+        ), 3))
         datasets.append({
             'label': label,
             'data': data,
@@ -186,10 +208,11 @@ def perfil_funcionario(funcionario_id):
     return render_template(
         'perfil.html',
         funcionario=funcionario,
-        sessions=sessions,
         labels=labels,
-        values=values,
         datasets=datasets,
+        reader_labels=reader_labels,
+        reader_values=reader_values,
+        monthly_stats=monthly_stats,
     )
 
 @app.route("/operadores/<int:funcionario_id>/editar", methods=["POST"])

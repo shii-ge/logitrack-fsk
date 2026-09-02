@@ -3,10 +3,10 @@
 {% block title %}LogiTrack — Perfil{% endblock %}
 
 {% block content %}
-<div class="px-64">
+<div class="max-w-6xl mx-auto">
   <div class="flex items-center justify-between mb-4">
     <div>
-      <h2 class="font-mono font-bold text-xl text-slate-800">{{ funcionario.nome }}</h2>
+      <h2 class="font-mono font-extrabold text-2xl text-slate-800">{{ funcionario.nome }}</h2>
       <p class="text-sm font-mono text-slate-500">UID: {{ funcionario.uid or '-' }}</p>
     </div>
     <div>
@@ -15,92 +15,123 @@
     </div>
   </div>
 
-  <div class="bg-white border border-slate-200 rounded p-4 mb-6">
-    <h3 class="font-mono font-semibold text-slate-700 mb-2">Tempo por dia e leitor</h3>
-    {% if labels and datasets and datasets|length > 0 %}
-    <canvas id="durChart"></canvas>
-    {% else %}
-    <p class="text-sm text-slate-500 font-mono">Não há pares entrada/saída completos para este operador.</p>
-    {% endif %}
-  </div>
+  <div data-polling-target data-polling-interval="5000">
+    <section class="bg-white border border-slate-200 rounded p-4 mb-6">
+      <h3 class="font-mono font-semibold text-slate-700 mb-2">Tempo por dia e leitor</h3>
+      {% if labels and datasets %}
+      <canvas id="durChart"></canvas>
+      {% else %}
+      <p class="text-sm text-slate-500 font-mono">Não há pares entrada/saída completos para este operador.</p>
+      {% endif %}
+    </section>
 
-  <div class="bg-white border border-slate-200 rounded p-4"
-       data-polling-target data-polling-interval="5000">
-    <h3 class="font-mono font-semibold text-slate-700 mb-2">Sessões</h3>
-    {% if sessions and sessions|length > 0 %}
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead>
-          <tr class="bg-slate-100 text-slate-700 font-mono text-left">
-            <th class="px-3 py-2">Início</th>
-            <th class="px-3 py-2">Fim</th>
-            <th class="px-3 py-2">Duração (horas)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for s in sessions %}
-          <tr class="{{ 'bg-white' if loop.index0 % 2 == 0 else 'bg-slate-50' }}">
-            <td class="px-3 py-2 font-mono text-slate-600">{{ s.start.strftime('%d/%m %H:%M:%S') }}</td>
-            <td class="px-3 py-2 font-mono text-slate-600">{{ s.end.strftime('%d/%m %H:%M:%S') }}</td>
-            <td class="px-3 py-2 font-mono text-slate-700">{{ ('%.3f' % s.hours) }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <section class="bg-white border border-slate-200 rounded p-4">
+      <h3 class="font-mono font-semibold text-slate-700 mb-4">Contribuição por leitor</h3>
+      {% if reader_labels and reader_values %}
+      <div class="max-w-sm mx-auto">
+        <canvas id="readerChart"></canvas>
+      </div>
+      {% else %}
+      <p class="text-sm text-slate-500 font-mono">Nenhuma sessão completa encontrada.</p>
+      {% endif %}
+      </section>
+
+      <section class="bg-white border border-slate-200 rounded p-4">
+        <h3 class="font-mono font-semibold text-slate-700 mb-4">Resumo de {{ monthly_stats.month }}</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+          <tbody>
+            <tr class="border-b border-slate-100">
+              <th class="px-3 py-3 text-left font-mono font-normal text-slate-500">Sessões completas</th>
+              <td class="px-3 py-3 text-right font-mono font-semibold text-slate-700">{{ monthly_stats.sessions }}</td>
+            </tr>
+            <tr class="border-b border-slate-100">
+              <th class="px-3 py-3 text-left font-mono font-normal text-slate-500">Tempo total</th>
+              <td class="px-3 py-3 text-right font-mono font-semibold text-slate-700">{{ '%.1f'|format(monthly_stats.hours) }} h</td>
+            </tr>
+            <tr class="border-b border-slate-100">
+              <th class="px-3 py-3 text-left font-mono font-normal text-slate-500">Leitores utilizados</th>
+              <td class="px-3 py-3 text-right font-mono font-semibold text-slate-700">{{ monthly_stats.readers }}</td>
+            </tr>
+            <tr>
+              <th class="px-3 py-3 text-left font-mono font-normal text-slate-500">Média por dia</th>
+              <td class="px-3 py-3 text-right font-mono font-semibold text-slate-700">{{ '%.1f'|format(monthly_stats.average_daily_hours) }} h</td>
+            </tr>
+          </tbody>
+          </table>
+        </div>
+      </section>
     </div>
-    {% else %}
-    <p class="text-sm text-slate-500 font-mono">Nenhuma sessão completa encontrada.</p>
-    {% endif %}
   </div>
 </div>
 
-{% if labels and datasets and datasets|length > 0 %}
+{% if labels and datasets or reader_labels and reader_values %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   (function () {
-    const labels = {{ labels| tojson }};
-    const datasets = {{ datasets| tojson }};
-    
-    const ctx = document.getElementById('durChart').getContext('2d');
-    
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: datasets.map((dataset) => ({
-          ...dataset,
-          borderRadius: 2,
-        }))
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        aspectRatio: 3,
-        animation: { duration: 300 },
-        scales: {
-          x: {
-            stacked: true,
-            ticks: { font: { family: 'JetBrains Mono' } }
-          },
-          y: {
-            stacked: true,
-            beginAtZero: true,
-            title: { display: true, text: 'Horas', font: { family: 'JetBrains Mono' } }
-          }
-        },
-        interaction: { mode: 'nearest', intersect: false },
-        plugins: {
-          legend: {
-            display: true,
-            position: 'bottom',
-            labels: { font: { family: 'JetBrains Mono' } }
-          }
-        }
-      }
-    });
-  }) ();
-</script>
+    const dayLabels = {{ labels|tojson }};
+    const dayDatasets = {{ datasets|tojson }};
+    const labels = {{ reader_labels|tojson }};
+    const values = {{ reader_values|tojson }};
+    const colors = ['#2563eb', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899',
+      '#14b8a6', '#f97316', '#84cc16', '#0ea5e9', '#a855f7', '#f43f5e'];
 
+    function renderCharts(animate) {
+      const animation = animate ? { duration: 300 } : false;
+      const durationCanvas = document.getElementById('durChart');
+      if (durationCanvas) {
+        new Chart(durationCanvas.getContext('2d'), {
+          type: 'bar',
+          data: { labels: dayLabels, datasets: dayDatasets },
+          options: {
+            responsive: true,
+            aspectRatio: 3,
+            animation: animation,
+            scales: {
+              x: { stacked: true, ticks: { font: { family: 'JetBrains Mono' } } },
+              y: {
+                stacked: true,
+                beginAtZero: true,
+                title: { display: true, text: 'Horas', font: { family: 'JetBrains Mono' } }
+              }
+            },
+            plugins: { legend: { position: 'bottom', labels: { font: { family: 'JetBrains Mono' } } } }
+          }
+        });
+      }
+
+      const readerCanvas = document.getElementById('readerChart');
+      if (readerCanvas) {
+        new Chart(readerCanvas.getContext('2d'), {
+          type: 'pie',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: values,
+              backgroundColor: labels.map((_, index) => colors[index % colors.length]),
+              borderColor: '#ffffff',
+              borderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            animation: animation,
+            plugins: {
+              legend: { position: 'bottom', labels: { font: { family: 'JetBrains Mono' } } },
+              tooltip: { callbacks: { label: (context) => `${context.label}: ${context.raw.toFixed(3)} h` } }
+            }
+          }
+        });
+      }
+    }
+
+    renderCharts(true);
+    document.addEventListener('tableupdated', function () {
+      renderCharts(false);
+    });
+  })();
+</script>
 {% endif %}
 
 {% endblock %}

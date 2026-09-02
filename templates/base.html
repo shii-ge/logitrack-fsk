@@ -59,5 +59,48 @@
       </div>
     </div>
   </div>
+  <script>
+    (function () {
+      var target = document.querySelector('[data-polling-target]');
+      if (!target) return;
+
+      var interval = Number(target.getAttribute('data-polling-interval')) || 5000;
+      var requestInFlight = false;
+
+      function refreshTable() {
+        if (requestInFlight || document.visibilityState === 'hidden') return;
+        requestInFlight = true;
+
+        fetch(window.location.href, {
+          cache: 'no-store',
+          headers: { 'X-Requested-With': 'polling' }
+        })
+          .then(function (response) {
+            if (!response.ok) throw new Error('Polling failed with HTTP ' + response.status);
+            return response.text();
+          })
+          .then(function (html) {
+            var documentParser = new DOMParser();
+            var nextDocument = documentParser.parseFromString(html, 'text/html');
+            var nextTarget = nextDocument.querySelector('[data-polling-target]');
+            if (!nextTarget) throw new Error('Polling response did not contain the table');
+
+            var currentTarget = document.querySelector('[data-polling-target]');
+            if (currentTarget) {
+              currentTarget.replaceWith(nextTarget);
+              document.dispatchEvent(new CustomEvent('tableupdated'));
+            }
+          })
+          .catch(function (error) {
+            console.error('Não foi possível atualizar a tabela:', error);
+          })
+          .finally(function () {
+            requestInFlight = false;
+          });
+      }
+
+      window.setInterval(refreshTable, interval);
+    })();
+  </script>
 </body>
 </html>

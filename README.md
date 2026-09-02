@@ -84,6 +84,8 @@ administrador aprove ou exclua os cadastros pendentes de funcionário/leitor.
 - **Registros** — histórico completo de `registros`, com nome do funcionário
   e do leitor já resolvidos via JOIN, e selo "entrada"/"saída" conforme o
   campo `status`.
+- As tabelas das páginas Operadores, Leitores, Registros e Perfil são
+  atualizadas automaticamente a cada 5 segundos enquanto a aba está visível.
 
 ## Simulando uma leitura (para teste)
 

@@ -6,7 +6,6 @@ from config import DB_CONFIG
 app = Flask(__name__)
 app.secret_key = "troque-esta-chave-em-producao"
 
-
 def get_connection():
     """Abre uma nova conexão com o banco MySQL (controle_acesso)."""
     return pymysql.connect(
@@ -57,7 +56,6 @@ def index():
         postos.setdefault(posto, []).append({"nome": nome, "desde": desde_fmt})
 
     return render_template("index.html", postos=postos)
-
 
 # ---------------------------------------------------------------------------
 # Operadores: lista a tabela funcionario (inclui os criados automaticamente

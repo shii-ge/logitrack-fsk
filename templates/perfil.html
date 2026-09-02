@@ -24,7 +24,8 @@
     {% endif %}
   </div>
 
-  <div class="bg-white border border-slate-200 rounded p-4">
+  <div class="bg-white border border-slate-200 rounded p-4"
+       data-polling-target data-polling-interval="5000">
     <h3 class="font-mono font-semibold text-slate-700 mb-2">Sessões</h3>
     {% if sessions and sessions|length > 0 %}
     <div class="overflow-x-auto">

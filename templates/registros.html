@@ -13,7 +13,8 @@
           autocomplete="off">     
   </div>
   
-  <div class="overflow-hidden rounded border border-slate-200 overflow-x-auto">
+  <div class="overflow-hidden rounded border border-slate-200 overflow-x-auto"
+       data-polling-target data-polling-interval="5000">
     <table class="w-full text-sm">
       <thead>
         <tr class="bg-slate-300 text-slate-800 font-mono text-left">
@@ -62,8 +63,7 @@
   (function () {
     var searchInput = document.getElementById('searchInput');
     if (searchInput) {
-      var table = document.querySelector('.px-64 table');
-      var tbody = table && table.querySelector('tbody');
+      var tbody = document.querySelector('.px-64 table tbody');
       var noResultsRow = null;
       var debounceTimer = null;
 
@@ -76,8 +76,8 @@
         }
       }
       function hideNoResults() {
-        if (noResultsRow && noResultsRow.parentNode) {
-          noResultsRow.parentNode.removeChild(noResultsRow);
+        if (noResultsRow) {
+          if (noResultsRow.parentNode) noResultsRow.parentNode.removeChild(noResultsRow);
           noResultsRow = null;
         }
       }
@@ -111,6 +111,12 @@
           searchInput.value = '';
           filterRows();
         }
+      });
+
+      document.addEventListener('tableupdated', function () {
+        tbody = document.querySelector('.px-64 table tbody');
+        noResultsRow = null;
+        filterRows();
       });
     }
 

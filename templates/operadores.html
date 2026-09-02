@@ -13,7 +13,8 @@
           autocomplete="off">
   </div>
 
-  <div class="overflow-hidden rounded border border-slate-200">
+  <div class="overflow-hidden rounded border border-slate-200"
+       data-polling-target data-polling-interval="5000">
     <table class="w-full text-sm">
       <thead>
         <tr class="bg-slate-300 text-slate-800 font-mono text-left text-sm">
@@ -138,23 +139,24 @@
       modal.classList.remove('flex');
     }
 
-    document.querySelectorAll('.js-edit-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.js-edit-btn');
+      if (btn) {
         var id = btn.getAttribute('data-id');
         document.getElementById('editForm').action = '/operadores/' + id + '/editar';
         document.getElementById('editNome').value = btn.getAttribute('data-nome') || '';
         document.getElementById('editUid').value = btn.getAttribute('data-uid') || '';
         openModal(editModal);
-      });
-    });
+        return;
+      }
 
-    document.querySelectorAll('.js-delete-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
+      btn = e.target.closest('.js-delete-btn');
+      if (btn) {
         var id = btn.getAttribute('data-id');
         document.getElementById('deleteForm').action = '/operadores/' + id + '/excluir';
         document.getElementById('deleteNome').textContent = btn.getAttribute('data-nome') || '';
         openModal(deleteModal);
-      });
+      }
     });
 
     document.getElementById('editCancelBtn').addEventListener('click', function () { closeModal(editModal); });
@@ -168,8 +170,7 @@
 
     var searchInput = document.getElementById('searchInput');
     if (searchInput) {
-      var table = document.querySelector('.px-64 table');
-      var tbody = table && table.querySelector('tbody');
+      var tbody = document.querySelector('.px-64 table tbody');
       var noResultsRow = null;
       var debounceTimer = null;
 
@@ -182,8 +183,8 @@
         }
       }
       function hideNoResults() {
-        if (noResultsRow && noResultsRow.parentNode) {
-          noResultsRow.parentNode.removeChild(noResultsRow);
+        if (noResultsRow) {
+          if (noResultsRow.parentNode) noResultsRow.parentNode.removeChild(noResultsRow);
           noResultsRow = null;
         }
       }
@@ -217,6 +218,12 @@
           searchInput.value = '';
           filterRows();
         }
+      });
+
+      document.addEventListener('tableupdated', function () {
+        tbody = document.querySelector('.px-64 table tbody');
+        noResultsRow = null;
+        filterRows();
       });
     }
 
